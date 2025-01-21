@@ -8,7 +8,7 @@ void processInput(GLFWwindow *window);
 
 
     // Vertex Shader 소스코드. GLSL로 작성한다.
-const char *vertexShaderSource = "#version 33- core\n"
+const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
     "{\n"
