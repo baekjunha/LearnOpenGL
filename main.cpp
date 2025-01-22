@@ -11,6 +11,7 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+<<<<<<< HEAD
 int main()
 {
     // glfw 초기화 및 설정
@@ -19,6 +20,15 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // OpenGL 버전 설정
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // OpenGL 버전 설정
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // OpenGL 코어 프로파일 사용
+=======
+    // Vertex Shader 소스코드. GLSL로 작성한다.
+const char *vertexShaderSource = "#version 330 core\n"
+    "layout (location = 0) in vec3 aPos;\n"
+    "void main()\n"
+    "{\n"
+    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "}\0";
+>>>>>>> 84a76cae3c7b6572df812676dbae0566f1b6f3e6
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Mac OS에서는 호환성 모드 설정
@@ -119,6 +129,7 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true); // 윈도우 닫기
 }
 
+<<<<<<< HEAD
 // glfw: 윈도우 크기 변경 시 호출되는 콜백 함수
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -126,3 +137,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // 새로운 윈도우 크기에 맞게 뷰포트를 설정
     glViewport(0, 0, width, height);
 }
+=======
+    // 입력 처리 함수: ESC 키를 누르면 창 닫기 플래그를 설정
+    // ----------------------------------------------------------------------------
+void processInput(GLFWwindow *window){
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE)== GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
+    // glfwGetKey: 특정 키의 현재 상태를 반환함.
+>>>>>>> 84a76cae3c7b6572df812676dbae0566f1b6f3e6
