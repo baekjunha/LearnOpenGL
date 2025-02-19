@@ -140,7 +140,8 @@ int main(){
         //VAO(Vertex Array Object)를 바인딩하여, 이 VAO에 설정된 모든 버텍스 속성 (예: VBO 연결 정보 등)을 사용하도록 지정.
         glDrawArrays(GL_TRIANGLES, 0, 3);
         //glDrawArrays(GL_TRIANGLES, 0, 3);는 배열의 0번 인덱스부터 3개의 정점을 사용하여 삼각형을 그린다는 의미이다.
-        
+        //vertices의 데이터를 기준으로 삼각형을 그린다.
+
         glfwSwapBuffers(window); // 더블 버퍼링을 수행. 후면 버퍼에 새 프레임을 렌더링한 후, glfwSwapBuffers를 호출해 전면 버퍼와 교체하며 깜빡임 방지.
         glfwPollEvents();
         // 프로그램에서 발생하는 다양한 이벤트를 수집하고 처리하는 작업. 여기서 이벤트는 키 입력뿐만 아니라 창 크기 조정, 마우스 움직임, 창 닫기 신호 등 프로그램과 관련된 모든 상호작용을 포함한다.

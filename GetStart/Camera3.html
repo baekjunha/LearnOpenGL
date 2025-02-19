@@ -8,7 +8,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <learnopengl/shader_m.h>
-#include <learnopengl/camera.h> // Camera 클래스 헤더 포함
 
 #include <iostream>
 
@@ -25,15 +24,21 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-// camera: Camera 클래스 인스턴스 생성 및 초기화
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f)); // 초기 카메라 위치 설정
-float lastX = SCR_WIDTH / 2.0f; // 이전 마우스 x 좌표 초기화 (화면 중앙)
-float lastY = SCR_HEIGHT / 2.0f; // 이전 마우스 y 좌표 초기화 (화면 중앙)
+// camera: 카메라 관련 변수 설정
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 3.0f); // 카메라 위치
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f); // 카메라가 바라보는 방향
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f); // 카메라의 위쪽 방향
+
 bool firstMouse = true; // 마우스 입력이 처음인지 확인하는 변수
+float yaw   = -90.0f;	// yaw (수평 회전 각도) 초기값 설정
+float pitch =  0.0f;  // pitch (수직 회전 각도) 초기값 설정
+float lastX =  800.0f / 2.0; // 이전 프레임의 마우스 x 좌표 (화면 중앙)
+float lastY =  600.0 / 2.0;  // 이전 프레임의 마우스 y 좌표 (화면 중앙)
+float fov   =  45.0f;  // field of view (시야각) 초기값 설정
 
 // timing: 시간 관련 변수 설정
 float deltaTime = 0.0f;	// 현재 프레임과 이전 프레임 사이의 시간 간격
-float lastFrame = 0.0f; // 이전 프레임의 시간
+float lastFrame = 0.0f;  // 이전 프레임의 시간
 
 int main()
 {
@@ -51,11 +56,11 @@ int main()
     // glfw window creation
     // --------------------
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL); // 창 생성
-    if (window == NULL) // 창 생성 실패 시
+    if (window == NULL)
     {
-        std::cout << "Failed to create GLFW window" << std::endl; // 오류 메시지 출력
+        std::cout << "Failed to create GLFW window" << std::endl; // 창 생성 실패 시 메시지 출력
         glfwTerminate(); // GLFW 종료
-        return -1; // 프로그램 종료
+        return -1;
     }
     glfwMakeContextCurrent(window); // 현재 스레드의 컨텍스트를 창으로 설정
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // 프레임버퍼 크기 변경 콜백 함수 등록
@@ -69,8 +74,8 @@ int main()
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) // GLAD 초기화
     {
-        std::cout << "Failed to initialize GLAD" << std::endl; // GLAD 초기화 실패 시 오류 메시지 출력
-        return -1; // 프로그램 종료
+        std::cout << "Failed to initialize GLAD" << std::endl; // GLAD 초기화 실패 시 메시지 출력
+        return -1;
     }
 
     // configure global opengl state
@@ -79,7 +84,7 @@ int main()
 
     // build and compile our shader zprogram
     // ------------------------------------
-    Shader ourShader("7.4.camera.vs", "7.4.camera.fs"); // 쉐이더 프로그램 생성 및 컴파일
+    Shader ourShader("7.3.camera.vs", "7.3.camera.fs"); // 쉐이더 프로그램 생성 및 컴파일
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -139,7 +144,7 @@ int main()
         glm::vec3( 1.5f,  0.2f, -1.5f),
         glm::vec3(-1.3f,  1.0f, -1.5f)
     };
-    unsigned int VBO, VAO; // VBO와 VAO의 ID를 저장할 변수 선언
+    unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO); // VAO (Vertex Array Object) 생성
     glGenBuffers(1, &VBO); // VBO (Vertex Buffer Object) 생성
 
@@ -180,7 +185,7 @@ int main()
     }
     else // 이미지 로드 실패 시
     {
-        std::cout << "Failed to load texture" << std::endl; // 오류 메시지 출력
+        std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data); // 이미지 데이터 해제
     // texture 2
@@ -203,7 +208,7 @@ int main()
     }
     else // 이미지 로드 실패 시
     {
-        std::cout << "Failed to load texture" << std::endl; // 오류 메시지 출력
+        std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data); // 이미지 데이터 해제
 
@@ -243,11 +248,11 @@ int main()
         ourShader.use(); // 쉐이더 프로그램 사용
 
         // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f); // 투영 행렬 생성 (Camera 클래스의 Zoom 속성 사용)
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f); // 투영 행렬 생성
         ourShader.setMat4("projection", projection); // 쉐이더에 투영 행렬 전달
 
         // camera/view transformation
-        glm::mat4 view = camera.GetViewMatrix(); // Camera 클래스의 GetViewMatrix() 함수를 사용하여 뷰 행렬 생성
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp); // 뷰 행렬 생성
         ourShader.setMat4("view", view); // 쉐이더에 뷰 행렬 전달
 
         // render boxes
@@ -278,7 +283,7 @@ int main()
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate(); // GLFW 종료
-    return 0; // 프로그램 종료
+    return 0;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -288,14 +293,15 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) // ESC 키가 눌렸으면
         glfwSetWindowShouldClose(window, true); // 창을 닫도록 설정
 
+    float cameraSpeed = static_cast<float>(2.5 * deltaTime); // 카메라 이동 속도 설정 (프레임 간 시간 간격에 따라 조절)
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) // W 키가 눌렸으면
-        camera.ProcessKeyboard(FORWARD, deltaTime); // Camera 클래스의 ProcessKeyboard() 함수 호출 (전진)
+        cameraPos += cameraSpeed * cameraFront; // 카메라를 앞으로 이동
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) // S 키가 눌렸으면
-        camera.ProcessKeyboard(BACKWARD, deltaTime); // Camera 클래스의 ProcessKeyboard() 함수 호출 (후진)
+        cameraPos -= cameraSpeed * cameraFront; // 카메라를 뒤로 이동
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) // A 키가 눌렸으면
-        camera.ProcessKeyboard(LEFT, deltaTime); // Camera 클래스의 ProcessKeyboard() 함수 호출 (좌)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; // 카메라를 왼쪽으로 이동
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) // D 키가 눌렸으면
-        camera.ProcessKeyboard(RIGHT, deltaTime); // Camera 클래스의 ProcessKeyboard() 함수 호출 (우)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed; // 카메라를 오른쪽으로 이동
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -306,7 +312,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height); // 뷰포트 설정 (렌더링 영역 설정)
 }
-
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
@@ -324,16 +329,36 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
     float xoffset = xpos - lastX; // 마우스 x축 이동 거리 계산
     float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top // 마우스 y축 이동 거리 계산 (y축 방향 반전)
-
     lastX = xpos; // 이전 마우스 x 좌표 업데이트
     lastY = ypos; // 이전 마우스 y 좌표 업데이트
 
-    camera.ProcessMouseMovement(xoffset, yoffset); // Camera 클래스의 ProcessMouseMovement() 함수 호출
+    float sensitivity = 0.1f; // change this value to your liking // 마우스 감도 설정
+    xoffset *= sensitivity; // x축 이동 거리에 감도 적용
+    yoffset *= sensitivity; // y축 이동 거리에 감도 적용
+
+    yaw += xoffset; // yaw (수평 회전 각도) 업데이트
+    pitch += yoffset; // pitch (수직 회전 각도) 업데이트
+
+    // make sure that when pitch is out of bounds, screen doesn't get flipped
+    if (pitch > 89.0f) // pitch 값이 상한을 넘으면
+        pitch = 89.0f; // pitch 값을 상한으로 제한
+    if (pitch < -89.0f) // pitch 값이 하한을 넘으면
+        pitch = -89.0f; // pitch 값을 하한으로 제한
+
+    glm::vec3 front; // 카메라가 바라보는 방향 벡터
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch)); // x 성분 계산
+    front.y = sin(glm::radians(pitch)); // y 성분 계산
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch)); // z 성분 계산
+    cameraFront = glm::normalize(front); // 카메라가 바라보는 방향 벡터 정규화
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    camera.ProcessMouseScroll(static_cast<float>(yoffset)); // Camera 클래스의 ProcessMouseScroll() 함수 호출
+    fov -= (float)yoffset; // fov (시야각) 업데이트
+    if (fov < 1.0f) // fov 값이 하한을 넘으면
+        fov = 1.0f; // fov 값을 하한으로 제한
+    if (fov > 45.0f) // fov 값이 상한을 넘으면
+        fov = 45.0f; // fov 값을 상한으로 제한
 }
